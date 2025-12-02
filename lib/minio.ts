@@ -20,6 +20,22 @@ export async function ensureBucket() {
     } else {
       console.log(`✅ Bucket ${bucketName} already exists`);
     }
+
+    // Set bucket policy to allow public read access
+    const policy = {
+      Version: "2012-10-17",
+      Statement: [
+        {
+          Effect: "Allow",
+          Principal: { AWS: ["*"] },
+          Action: ["s3:GetObject"],
+          Resource: [`arn:aws:s3:::${bucketName}/*`],
+        },
+      ],
+    };
+
+    await minioClient.setBucketPolicy(bucketName, JSON.stringify(policy));
+    console.log(`✅ Bucket ${bucketName} is now publicly readable`);
   } catch (err) {
     console.error("❌ Error ensuring bucket exists:", err);
   }

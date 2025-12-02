@@ -164,18 +164,31 @@ export async function getFileUrl(
   forceDownload: boolean = false
 ): Promise<string | null> {
   try {
-    // Generate a presigned URL with download headers if needed
+    // For public buckets, return direct URL (no presigning needed)
+    const endpoint = process.env.MINIO_ENDPOINT!;
+    const port = process.env.MINIO_PORT || "443";
+    const useSSL = process.env.MINIO_USE_SSL === "true";
+    const protocol = useSSL ? "https" : "http";
+    const portSuffix =
+      (useSSL && port === "443") || (!useSSL && port === "80")
+        ? ""
+        : `:${port}`;
+
+    // Return public URL directly for viewing
+    if (!forceDownload) {
+      return `${protocol}://${endpoint}${portSuffix}/${bucketName}/${fileName}`;
+    }
+
+    // Use presigned URL only for downloads with custom headers
     const url = await minioClient.presignedGetObject(
       bucketName,
       fileName,
       expirySeconds,
-      forceDownload
-        ? {
-            "response-content-disposition": `attachment; filename="${encodeURIComponent(
-              fileName
-            )}"`,
-          }
-        : undefined
+      {
+        "response-content-disposition": `attachment; filename="${encodeURIComponent(
+          fileName
+        )}"`,
+      }
     );
     return url;
   } catch (error: any) {

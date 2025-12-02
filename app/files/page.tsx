@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function FilesPage() {
   const files = await listFiles();
-  console.log({ files });
+  // console.log({ files });
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
